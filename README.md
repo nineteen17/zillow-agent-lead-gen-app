@@ -4,7 +4,8 @@ A New Zealand property platform with Zillow-style Premier Agent lead generation 
 
 ## 🏗️ Architecture
 
-- **Backend**: Node.js/Express with TypeScript
+### Backend
+- **Framework**: Node.js/Express with TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
 - **Cache**: Redis
 - **Queue**: RabbitMQ + BullMQ
@@ -12,6 +13,14 @@ A New Zealand property platform with Zillow-style Premier Agent lead generation 
 - **Email**: Resend + React Email
 - **Payments**: Stripe
 - **API Docs**: Swagger/OpenAPI
+
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Data Fetching**: TanStack Query (React Query)
+- **Icons**: Lucide React
+- **Maps**: Mapbox GL / Google Maps (optional)
 
 ## 📁 Project Structure
 
@@ -27,13 +36,15 @@ zillow-agent-lead-gen-app/
 │   │   ├── middleware/      # Express middleware
 │   │   ├── jobs/            # Background workers
 │   │   ├── emails/          # Email templates
-│   │   ├── utils/           # Utility functions
-│   │   ├── app.ts           # Express app setup
 │   │   └── index.ts         # Entry point
-│   ├── drizzle/             # Database migrations
-│   ├── Dockerfile
-│   ├── package.json
-│   └── tsconfig.json
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   │   ├── app/             # Next.js pages (App Router)
+│   │   ├── components/      # Reusable UI components
+│   │   ├── lib/             # Utilities & API client
+│   │   └── types/           # TypeScript types
+│   └── next.config.mjs
 ├── plan/                    # Project planning docs
 ├── docker-compose.yml       # Development setup
 ├── docker-compose.prod.yml  # Production setup
@@ -57,36 +68,33 @@ zillow-agent-lead-gen-app/
    cd zillow-agent-lead-gen-app
    ```
 
-2. **Set up environment variables**
-   ```bash
-   cd backend
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. **Start infrastructure services**
+2. **Start infrastructure services**
    ```bash
    docker-compose up -d postgres redis rabbitmq
    ```
 
-4. **Install dependencies**
+3. **Set up Backend**
    ```bash
    cd backend
+   cp .env.example .env
+   # Edit .env with your configuration
    npm install
-   ```
-
-5. **Run database migrations**
-   ```bash
    npm run db:generate
    npm run db:migrate
+   npm run dev
    ```
 
-6. **Start development server**
+4. **Set up Frontend** (in a new terminal)
    ```bash
+   cd frontend
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   npm install
    npm run dev
    ```
 
 The API will be available at `http://localhost:3000`
+The frontend will be available at `http://localhost:3001`
 
 ### Using Docker Compose (Full Stack)
 
@@ -99,6 +107,7 @@ This starts all services:
 - Redis on port 6379
 - RabbitMQ on ports 5672 (AMQP) and 15672 (Management UI)
 - Backend API on port 3000
+- Frontend on port 3001 (requires separate npm install/dev)
 
 ## 📚 API Documentation
 
