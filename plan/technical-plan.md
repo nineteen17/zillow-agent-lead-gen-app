@@ -353,3 +353,97 @@ Phase 4 —
 ⸻
 
 This technical plan intentionally avoids business details and focuses on stack, data, APIs, valuation architecture, and lead routing, so you can build a separate, deeper system design or sequence diagrams later as needed.
+
+⸻
+
+## Implementation Checklist
+
+### Backend Infrastructure
+- [ ] Initialize backend project structure and package.json
+- [ ] Set up Docker Compose for development (Postgres, Redis, RabbitMQ)
+- [ ] Configure TypeScript and ESLint
+- [ ] Create environment configuration and .env.example
+
+### Database & ORM
+- [ ] Create database schema with Drizzle ORM
+- [ ] Implement database migrations
+- [ ] Set up database seeding for development
+
+### Authentication & Authorization
+- [ ] Set up BetterAuth configuration
+- [ ] Implement user roles (user, agent, admin)
+- [ ] Create auth middleware for protected routes
+
+### Type Safety & Validation
+- [ ] Create shared Zod schemas for all entities
+- [ ] Implement type sync utilities between frontend/backend
+- [ ] Set up validation middleware
+
+### Core Application
+- [ ] Implement Express app setup with middleware
+- [ ] Create repository layer for database operations
+- [ ] Implement service layer with business logic
+- [ ] Set up error handling middleware
+- [ ] Implement request logging
+
+### Public API Endpoints
+- [ ] GET /api/properties/:id - Get property details
+- [ ] GET /api/valuations/:propertyId - Get property valuation
+- [ ] GET /api/suburbs/:suburb/stats - Get suburb statistics
+- [ ] GET /api/properties/search - Search properties
+- [ ] POST /api/leads - Create buyer/seller lead
+
+### Agent API Endpoints
+- [ ] GET /api/agent/me - Get agent profile
+- [ ] GET /api/agent/leads - List agent's leads
+- [ ] PATCH /api/agent/leads/:id - Update lead status
+- [ ] GET /api/agent/subscriptions - Get agent subscriptions
+- [ ] GET /api/agent/metrics - Get agent performance metrics
+
+### Admin API Endpoints
+- [ ] POST /api/admin/ingest/properties - Ingest property data
+- [ ] POST /api/admin/ingest/sales - Ingest sales data
+- [ ] POST /api/admin/ingest/rentals - Ingest rental data
+- [ ] POST /api/admin/retrain-avm - Trigger AVM retraining
+- [ ] POST /api/admin/override-property - Override property data
+
+### Lead Routing System
+- [ ] Implement lead routing logic service
+- [ ] Create agent ranking algorithm
+- [ ] Implement lead assignment rules
+- [ ] Set up lead notification system
+
+### Caching & Queues
+- [ ] Set up Redis caching layer
+- [ ] Implement cache invalidation strategies
+- [ ] Set up RabbitMQ queue system
+- [ ] Implement BullMQ background jobs
+- [ ] Create scheduled jobs (nightly data ingestion, weekly AVM training)
+
+### Email System
+- [ ] Set up Resend email integration
+- [ ] Create React Email templates (lead notifications, agent onboarding)
+- [ ] Implement email queue and retry logic
+
+### Payment Integration
+- [ ] Implement Stripe payment integration
+- [ ] Create subscription management endpoints
+- [ ] Set up webhook handlers for payment events
+- [ ] Implement billing logic
+
+### API Documentation
+- [ ] Set up Swagger API documentation
+- [ ] Document all endpoints with examples
+- [ ] Add authentication documentation
+
+### DevOps & Deployment
+- [ ] Create GitHub Actions CI/CD workflow
+- [ ] Set up Docker build for production
+- [ ] Create Docker Swarm production configuration
+- [ ] Set up health check endpoints
+
+### Documentation
+- [ ] Write comprehensive README with setup instructions
+- [ ] Document environment variables
+- [ ] Create API usage examples
+- [ ] Document development workflow
