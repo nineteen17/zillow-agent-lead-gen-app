@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { LeadForm } from '@/components/LeadForm';
+import { SocialShare } from '@/components/SocialShare';
 import { Bed, Bath, Home as HomeIcon, MapPin, TrendingUp, Calendar } from 'lucide-react';
 import { use } from 'react';
 
@@ -63,7 +64,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             {/* Property Info */}
             <div className="card">
               <div className="flex items-start justify-between mb-4">
-                <div>
+                <div className="flex-1">
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
                     {property.addressLine1}
                   </h1>
@@ -72,6 +73,12 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     {property.suburb}, {property.city} {property.postcode}
                   </div>
                 </div>
+                <SocialShare
+                  url={typeof window !== 'undefined' ? window.location.href : ''}
+                  title={`${property.addressLine1} - ${formatPrice(valuation?.estimateValue || property.cvValue)}`}
+                  description={`${property.bedrooms || 0} bed, ${property.bathrooms || 0} bath ${property.propertyType} in ${property.suburb}`}
+                  hashtags={['NZProperty', 'RealEstate', property.suburb.replace(/\s+/g, '')]}
+                />
               </div>
 
               <div className="flex flex-wrap gap-6 py-4 border-y border-gray-200">
