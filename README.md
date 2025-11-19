@@ -240,15 +240,13 @@ Automatically assigns leads to the best available agent based on:
 - **Rate Limited**: 10 emails/second to prevent spam
 - **Automatic Retries**: Failed emails retry automatically
 
-### Valuation Engine (Heuristic)
+### Valuation Engine
 
-Current implementation uses formula-based approach:
+Formula-based valuation system:
 - Base value from Council CV/RV
 - Adjustments for property characteristics (bedrooms, bathrooms, land area)
 - Suburb median calibration
 - ±10% confidence bands
-
-*Future: ML model (XGBoost/LightGBM) for improved accuracy*
 
 ### Viral Features ✅
 
@@ -557,7 +555,6 @@ With 20 paying agents:
 - [ ] Agent reviews & ratings
 
 **Platform Enhancements**
-- [ ] ML-based valuation model (XGBoost/LightGBM)
 - [ ] Advanced search filters
 - [ ] Map-based property browser
 - [ ] Property alerts & saved searches
