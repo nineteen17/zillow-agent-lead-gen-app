@@ -7,6 +7,8 @@ export const leadTypeEnum = pgEnum('lead_type', ['buyer', 'seller', 'mortgage', 
 export const leadStatusEnum = pgEnum('lead_status', ['new', 'delivered', 'contacted', 'qualified', 'closed_won', 'closed_lost']);
 export const subscriptionTierEnum = pgEnum('subscription_tier', ['basic', 'premium', 'seller']);
 export const userRoleEnum = pgEnum('user_role', ['user', 'agent', 'admin']);
+export const alertFrequencyEnum = pgEnum('alert_frequency', ['daily', 'weekly', 'monthly']);
+export const alertTypeEnum = pgEnum('alert_type', ['price_change', 'new_sales', 'market_trends']);
 
 // Properties table
 export const properties = pgTable('properties', {
@@ -232,6 +234,40 @@ export const valuations = pgTable('valuations', {
   dateIdx: index('valuations_date_idx').on(table.estimateDate),
 }));
 
+// Email subscriptions table
+export const emailSubscriptions = pgTable('email_subscriptions', {
+  id: text('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  suburb: varchar('suburb', { length: 100 }),
+  frequency: alertFrequencyEnum('frequency').default('weekly').notNull(),
+  alertTypes: json('alert_types').$type<string[]>().notNull(), // ['price_change', 'new_sales', 'market_trends']
+  isActive: boolean('is_active').default(true).notNull(),
+  verificationToken: text('verification_token'),
+  verifiedAt: timestamp('verified_at'),
+  unsubscribeToken: text('unsubscribe_token'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  emailIdx: index('email_subscriptions_email_idx').on(table.email),
+  suburbIdx: index('email_subscriptions_suburb_idx').on(table.suburb),
+  activeIdx: index('email_subscriptions_active_idx').on(table.isActive),
+  verificationIdx: index('email_subscriptions_verification_idx').on(table.verificationToken),
+}));
+
+// Alert history table
+export const alertHistory = pgTable('alert_history', {
+  id: text('id').primaryKey(),
+  subscriptionId: text('subscription_id').notNull().references(() => emailSubscriptions.id, { onDelete: 'cascade' }),
+  alertType: alertTypeEnum('alert_type').notNull(),
+  suburb: varchar('suburb', { length: 100 }).notNull(),
+  data: json('data'), // Store alert-specific data (old price, new price, etc.)
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+}, (table) => ({
+  subscriptionIdx: index('alert_history_subscription_idx').on(table.subscriptionId),
+  sentIdx: index('alert_history_sent_idx').on(table.sentAt),
+  suburbTypeIdx: index('alert_history_suburb_type_idx').on(table.suburb, table.alertType),
+}));
+
 // Relations
 export const propertiesRelations = relations(properties, ({ many }) => ({
   sales: many(sales),
@@ -321,5 +357,16 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, {
     fields: [accounts.userId],
     references: [users.id],
+  }),
+}));
+
+export const emailSubscriptionsRelations = relations(emailSubscriptions, ({ many }) => ({
+  alerts: many(alertHistory),
+}));
+
+export const alertHistoryRelations = relations(alertHistory, ({ one }) => ({
+  subscription: one(emailSubscriptions, {
+    fields: [alertHistory.subscriptionId],
+    references: [emailSubscriptions.id],
   }),
 }));

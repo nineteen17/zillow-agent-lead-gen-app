@@ -64,8 +64,24 @@ export class ApiClient {
   }
 
   // Suburbs
+  async getAllSuburbs() {
+    return this.request<{ suburbs: string[] }>('/suburbs');
+  }
+
   async getSuburbStats(suburb: string) {
     return this.request(`/suburbs/${encodeURIComponent(suburb)}/stats`);
+  }
+
+  async getSuburbSales(suburb: string, limit = 20) {
+    return this.request(`/suburbs/${encodeURIComponent(suburb)}/sales?limit=${limit}`);
+  }
+
+  async getSuburbTrends(suburb: string, monthsBack = 24) {
+    return this.request(`/suburbs/${encodeURIComponent(suburb)}/trends?monthsBack=${monthsBack}`);
+  }
+
+  async getSuburbProperties(suburb: string, limit = 50) {
+    return this.request(`/suburbs/${encodeURIComponent(suburb)}/properties?limit=${limit}`);
   }
 
   // Leads

@@ -88,4 +88,75 @@ export class PropertyService {
 
     return valuation;
   }
+
+  async getSuburbDetailedStats(suburb: string) {
+    const cacheKey = `suburb:detailed:${suburb}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      logger.info(`Suburb stats for ${suburb} served from cache`);
+      return cached;
+    }
+
+    const stats = await this.propertyRepo.getSuburbDetailedStats(suburb);
+
+    // Cache for 24 hours
+    await cache.set(cacheKey, stats, 86400);
+    return stats;
+  }
+
+  async getSuburbRecentSales(suburb: string, limit = 20) {
+    const cacheKey = `suburb:sales:${suburb}:${limit}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const sales = await this.propertyRepo.getSuburbRecentSales(suburb, limit);
+
+    // Cache for 6 hours
+    await cache.set(cacheKey, sales, 21600);
+    return sales;
+  }
+
+  async getSuburbPriceTrends(suburb: string, monthsBack = 24) {
+    const cacheKey = `suburb:trends:${suburb}:${monthsBack}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const trends = await this.propertyRepo.getSuburbPriceTrends(suburb, monthsBack);
+
+    // Cache for 24 hours (trends don't change often)
+    await cache.set(cacheKey, trends, 86400);
+    return trends;
+  }
+
+  async getPropertiesBySuburb(suburb: string, limit = 50) {
+    const cacheKey = `suburb:properties:${suburb}:${limit}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const properties = await this.propertyRepo.findBySuburb(suburb, limit);
+
+    // Cache for 1 hour
+    await cache.set(cacheKey, properties, 3600);
+    return properties;
+  }
+
+  async getAllSuburbs() {
+    const cacheKey = 'suburbs:all';
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const suburbs = await this.propertyRepo.getAllSuburbs();
+
+    // Cache for 24 hours
+    await cache.set(cacheKey, suburbs, 86400);
+    return suburbs;
+  }
 }

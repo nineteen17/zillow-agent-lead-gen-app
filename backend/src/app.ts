@@ -19,6 +19,7 @@ import leadController from './controllers/lead.controller.js';
 import agentController from './controllers/agent.controller.js';
 import adminController from './controllers/admin.controller.js';
 import stripeController from './controllers/stripe.controller.js';
+import emailSubscriptionController from './controllers/emailSubscription.controller.js';
 
 export function createApp() {
   const app = express();
@@ -78,6 +79,7 @@ export function createApp() {
   app.use('/api/agent', agentController);
   app.use('/api/admin', adminController);
   app.use('/api/stripe', stripeController);
+  app.use('/api/subscriptions', emailSubscriptionController);
 
   // 404 handler
   app.use(notFoundHandler);

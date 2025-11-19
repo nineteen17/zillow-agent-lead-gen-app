@@ -140,4 +140,135 @@ export class PropertyRepository {
 
     return stats || null;
   }
+
+  async getSuburbDetailedStats(suburb: string) {
+    // Get property counts by type
+    const propertyStats = await db
+      .select({
+        totalProperties: sql<number>`count(*)`,
+        avgCvValue: sql<number>`avg(${properties.cvValue})`,
+        medianCvValue: sql<number>`percentile_cont(0.5) within group (order by ${properties.cvValue})`,
+        avgBedrooms: sql<number>`avg(${properties.bedrooms})`,
+        avgBathrooms: sql<number>`avg(${properties.bathrooms})`,
+        avgLandArea: sql<number>`avg(${properties.landAreaSqm})`,
+        avgFloorArea: sql<number>`avg(${properties.floorAreaSqm})`,
+      })
+      .from(properties)
+      .where(eq(properties.suburb, suburb));
+
+    // Get sales statistics for last 3, 6, and 12 months
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+    const [salesStats3M] = await db
+      .select({
+        count: sql<number>`count(*)`,
+        avgPrice: sql<number>`avg(${sales.salePrice})`,
+        medianPrice: sql<number>`percentile_cont(0.5) within group (order by ${sales.salePrice})`,
+        minPrice: sql<number>`min(${sales.salePrice})`,
+        maxPrice: sql<number>`max(${sales.salePrice})`,
+      })
+      .from(sales)
+      .innerJoin(properties, eq(sales.propertyId, properties.id))
+      .where(and(
+        eq(properties.suburb, suburb),
+        gte(sales.saleDate, threeMonthsAgo)
+      ));
+
+    const [salesStats6M] = await db
+      .select({
+        count: sql<number>`count(*)`,
+        avgPrice: sql<number>`avg(${sales.salePrice})`,
+        medianPrice: sql<number>`percentile_cont(0.5) within group (order by ${sales.salePrice})`,
+      })
+      .from(sales)
+      .innerJoin(properties, eq(sales.propertyId, properties.id))
+      .where(and(
+        eq(properties.suburb, suburb),
+        gte(sales.saleDate, sixMonthsAgo)
+      ));
+
+    const [salesStats12M] = await db
+      .select({
+        count: sql<number>`count(*)`,
+        avgPrice: sql<number>`avg(${sales.salePrice})`,
+        medianPrice: sql<number>`percentile_cont(0.5) within group (order by ${sales.salePrice})`,
+      })
+      .from(sales)
+      .innerJoin(properties, eq(sales.propertyId, properties.id))
+      .where(and(
+        eq(properties.suburb, suburb),
+        gte(sales.saleDate, twelveMonthsAgo)
+      ));
+
+    return {
+      suburb,
+      propertyStats: propertyStats[0],
+      salesStats: {
+        last3Months: salesStats3M,
+        last6Months: salesStats6M,
+        last12Months: salesStats12M,
+      },
+    };
+  }
+
+  async getSuburbRecentSales(suburb: string, limit = 20) {
+    const recentSales = await db
+      .select({
+        id: sales.id,
+        propertyId: sales.propertyId,
+        saleDate: sales.saleDate,
+        salePrice: sales.salePrice,
+        addressLine1: properties.addressLine1,
+        bedrooms: properties.bedrooms,
+        bathrooms: properties.bathrooms,
+        propertyType: properties.propertyType,
+        landAreaSqm: properties.landAreaSqm,
+        floorAreaSqm: properties.floorAreaSqm,
+      })
+      .from(sales)
+      .innerJoin(properties, eq(sales.propertyId, properties.id))
+      .where(eq(properties.suburb, suburb))
+      .orderBy(desc(sales.saleDate))
+      .limit(limit);
+
+    return recentSales;
+  }
+
+  async getSuburbPriceTrends(suburb: string, monthsBack = 24) {
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - monthsBack);
+
+    const trends = await db
+      .select({
+        month: sql<string>`to_char(${sales.saleDate}, 'YYYY-MM')`,
+        avgPrice: sql<number>`avg(${sales.salePrice})`,
+        medianPrice: sql<number>`percentile_cont(0.5) within group (order by ${sales.salePrice})`,
+        salesCount: sql<number>`count(*)`,
+      })
+      .from(sales)
+      .innerJoin(properties, eq(sales.propertyId, properties.id))
+      .where(and(
+        eq(properties.suburb, suburb),
+        gte(sales.saleDate, startDate)
+      ))
+      .groupBy(sql`to_char(${sales.saleDate}, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${sales.saleDate}, 'YYYY-MM')`);
+
+    return trends;
+  }
+
+  async getAllSuburbs() {
+    const suburbs = await db
+      .selectDistinct({ suburb: properties.suburb })
+      .from(properties)
+      .where(sql`${properties.suburb} IS NOT NULL AND ${properties.suburb} != ''`)
+      .orderBy(properties.suburb);
+
+    return suburbs.map(s => s.suburb);
+  }
 }
