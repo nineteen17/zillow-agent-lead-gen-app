@@ -493,41 +493,6 @@ export const experimentEvents = pgTable('experiment_events', {
   eventTypeIdx: index('experiment_events_event_type_idx').on(table.eventType),
 }));
 
-// SMS notification queue table
-export const smsNotifications = pgTable('sms_notifications', {
-  id: text('id').primaryKey(),
-  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
-  phoneNumber: varchar('phone_number', { length: 50 }).notNull(),
-  message: text('message').notNull(),
-  leadId: text('lead_id').references(() => leads.id, { onDelete: 'set null' }),
-  status: varchar('status', { length: 50 }).default('pending').notNull(), // 'pending', 'sent', 'failed', 'delivered'
-  twilioMessageSid: varchar('twilio_message_sid', { length: 255 }),
-  errorMessage: text('error_message'),
-  sentAt: timestamp('sent_at'),
-  deliveredAt: timestamp('delivered_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (table) => ({
-  agentIdx: index('sms_notifications_agent_idx').on(table.agentId),
-  statusIdx: index('sms_notifications_status_idx').on(table.status),
-  leadIdx: index('sms_notifications_lead_idx').on(table.leadId),
-}));
-
-// Agent preferences table
-export const agentPreferences = pgTable('agent_preferences', {
-  id: text('id').primaryKey(),
-  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }).unique(),
-  emailNotifications: boolean('email_notifications').default(true),
-  smsNotifications: boolean('sms_notifications').default(false),
-  notifyOnNewLead: boolean('notify_on_new_lead').default(true),
-  notifyOnLeadUpdate: boolean('notify_on_lead_update').default(false),
-  dailyDigest: boolean('daily_digest').default(false),
-  weeklyReport: boolean('weekly_report').default(true),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-  agentIdx: uniqueIndex('agent_preferences_agent_idx').on(table.agentId),
-}));
-
 // Relations for new tables
 export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
   user: one(users, {
@@ -601,23 +566,5 @@ export const experimentEventsRelations = relations(experimentEvents, ({ one }) =
   assignment: one(experimentAssignments, {
     fields: [experimentEvents.assignmentId],
     references: [experimentAssignments.id],
-  }),
-}));
-
-export const smsNotificationsRelations = relations(smsNotifications, ({ one }) => ({
-  agent: one(agents, {
-    fields: [smsNotifications.agentId],
-    references: [agents.id],
-  }),
-  lead: one(leads, {
-    fields: [smsNotifications.leadId],
-    references: [leads.id],
-  }),
-}));
-
-export const agentPreferencesRelations = relations(agentPreferences, ({ one }) => ({
-  agent: one(agents, {
-    fields: [agentPreferences.agentId],
-    references: [agents.id],
   }),
 }));

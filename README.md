@@ -230,18 +230,18 @@ Automatically assigns leads to the best available agent based on:
   - Tier and monthly price shown
   - Active status indicators
 
-### Email & SMS Notifications ✅
+### Email Notifications ✅
 
-**Automated notification system** with BullMQ worker
+**Automated email notification system** with BullMQ worker
 
-- **Lead Notifications**: Instant email/SMS to agent when new lead arrives
+- **Lead Notifications**: Instant email to agent when new lead arrives
 - **Welcome Emails**: Sent after agent signs up
 - **Password Reset**: Secure token-based password reset flow
-- **SMS Alerts**: Twilio integration for SMS notifications (optional)
-- **Agent Preferences**: Customizable notification settings per agent
+- **Email Alerts**: Configurable notification preferences per agent
+- **Daily/Weekly Digests**: Optional summary emails (planned)
 - **Beautiful HTML Templates**: Professional design with branding
 - **Rate Limited**: 10 emails/second to prevent spam
-- **Automatic Retries**: Failed messages retry automatically
+- **Automatic Retries**: Failed emails retry automatically
 
 ### Advanced Analytics & Reporting ✅
 
@@ -593,11 +593,10 @@ With 20 paying agents:
 
 **Agent Features**
 - [x] Agent profile pages (public) - `/agents/[agentId]`
-- [x] SMS notifications (Twilio integration)
 - [x] Subscription management UI (add/remove suburbs, upgrade tier)
 - [x] Password reset flow (`/forgot-password`, `/reset-password`)
 - [x] Agent reviews & ratings (5-star system with responses)
-- [x] Agent preferences (email/SMS notification settings)
+- [x] Email notification preferences (daily/weekly digest options)
 
 **Platform Enhancements**
 - [x] Advanced search filters (price, beds, baths, property type, land area, sorting)
