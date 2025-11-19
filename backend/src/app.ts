@@ -18,6 +18,7 @@ import suburbController from './controllers/suburb.controller.js';
 import leadController from './controllers/lead.controller.js';
 import agentController from './controllers/agent.controller.js';
 import adminController from './controllers/admin.controller.js';
+import stripeController from './controllers/stripe.controller.js';
 
 export function createApp() {
   const app = express();
@@ -76,6 +77,7 @@ export function createApp() {
   app.use('/api/leads', leadController);
   app.use('/api/agent', agentController);
   app.use('/api/admin', adminController);
+  app.use('/api/stripe', stripeController);
 
   // 404 handler
   app.use(notFoundHandler);

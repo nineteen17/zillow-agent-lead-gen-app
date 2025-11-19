@@ -198,4 +198,72 @@ router.post('/valuations/recompute/:suburb', async (req: Request, res: Response,
   }
 });
 
+/**
+ * @swagger
+ * /api/admin/properties/{id}/override:
+ *   patch:
+ *     summary: Override property data manually
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bedrooms:
+ *                 type: integer
+ *               bathrooms:
+ *                 type: integer
+ *               floorAreaSqm:
+ *                 type: integer
+ *               yearBuilt:
+ *                 type: integer
+ *               cvValue:
+ *                 type: integer
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Property updated
+ *       404:
+ *         description: Property not found
+ */
+router.patch('/properties/:id/override', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Check if property exists
+    const property = await propertyRepo.findById(id);
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+
+    // Update property with override data
+    const updated = await propertyRepo.update(id, updateData);
+
+    logger.info(`Admin override applied to property ${id}`, {
+      admin: req.user?.email,
+      updates: Object.keys(updateData),
+    });
+
+    res.json({
+      success: true,
+      property: updated,
+      message: 'Property data overridden successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
