@@ -82,7 +82,7 @@ export class PropertyRepository {
     const total = Number(countResult[0]?.count || 0);
 
     return {
-      items,
+      properties: items,
       pagination: {
         page,
         limit,
