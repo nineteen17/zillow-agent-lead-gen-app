@@ -129,6 +129,35 @@ export class EmailService {
   }
 
   /**
+   * Send password reset email
+   */
+  async sendPasswordResetEmail(params: {
+    to: string;
+    name: string;
+    resetUrl: string;
+  }) {
+    if (!resend || !env.RESEND_API_KEY) {
+      logger.warn('Resend not configured, skipping email send');
+      return null;
+    }
+
+    try {
+      const result = await resend.emails.send({
+        from: `${env.EMAIL_FROM_NAME || 'Zillow NZ'} <${env.EMAIL_FROM || 'noreply@yourdomain.com'}>`,
+        to: params.to,
+        subject: 'Reset your password',
+        html: this.generatePasswordResetHTML(params),
+      });
+
+      logger.info(`Password reset email sent to ${params.to}`);
+      return result;
+    } catch (error) {
+      logger.error('Failed to send password reset email:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Generate welcome email HTML
    */
   private generateWelcomeEmailHTML(agentName: string): string {
@@ -160,6 +189,44 @@ export class EmailService {
                 <li>Manage your subscriptions</li>
               </ul>
               <p>If you have any questions, please don't hesitate to reach out to our support team.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  /**
+   * Generate password reset email HTML
+   */
+  private generatePasswordResetHTML(params: {
+    name: string;
+    resetUrl: string;
+  }): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background-color: #f9f9f9; }
+            .button { display: inline-block; padding: 12px 24px; background-color: #0066cc; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+            .warning { color: #666; font-size: 14px; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Reset Your Password</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${params.name},</p>
+              <p>We received a request to reset your password. Click the button below to choose a new password:</p>
+              <a href="${params.resetUrl}" class="button">Reset Password</a>
+              <p class="warning">This link will expire in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
             </div>
           </div>
         </body>
