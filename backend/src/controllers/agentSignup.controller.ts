@@ -7,6 +7,7 @@ import { AppError } from '../middleware/error.middleware.js';
 import { validateBody } from '../middleware/validation.middleware.js';
 import { subscriptionTierSchema } from '../models/zod-schemas.js';
 import { logger } from '../config/logger.js';
+import { emailQueue } from '../config/bullmq.js';
 
 const router = Router();
 const agentService = new AgentService();
@@ -172,6 +173,16 @@ router.post(
         });
 
         logger.info(`Stripe checkout session created for agent ${agent.id}`);
+
+        // Send welcome email (async, don't wait)
+        await emailQueue.add('agent-welcome', {
+          type: 'agent-welcome',
+          data: {
+            agentEmail: email,
+            agentName: name,
+          },
+        });
+        logger.info(`Welcome email queued for agent ${email}`);
 
         res.json({
           success: true,

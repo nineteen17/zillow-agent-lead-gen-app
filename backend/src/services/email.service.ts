@@ -120,7 +120,7 @@ export class EmailService {
 
               <p><strong>Action Required:</strong> Please contact this lead as soon as possible to maximize your conversion rate.</p>
 
-              <a href="${env.API_URL}/dashboard/agent/leads" class="button">View Lead in Dashboard</a>
+              <a href="${env.FRONTEND_URL}/agent/dashboard" class="button">View Lead in Dashboard</a>
             </div>
           </div>
         </body>
