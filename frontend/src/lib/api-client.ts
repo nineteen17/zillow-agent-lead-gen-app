@@ -117,6 +117,29 @@ export class ApiClient {
     const query = period ? `?period=${period}` : '';
     return this.request(`/agent/metrics${query}`);
   }
+
+  // Agent signup
+  async signupAgent(data: {
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    agencyName?: string;
+    licenseNumber?: string;
+    tier: 'basic' | 'premium' | 'seller';
+    suburbs: string[];
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      checkoutUrl: string;
+      agentId: string;
+      sessionId: string;
+    }>('/agent/signup', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiClient = new ApiClient();

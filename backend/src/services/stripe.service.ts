@@ -36,9 +36,9 @@ export class StripeService {
 
     // Define pricing (in cents)
     const pricing: Record<SubscriptionTier, number> = {
-      basic: 9900, // $99/month
-      premium: 24900, // $249/month
-      seller: 49900, // $499/month
+      basic: 19900, // $199/month
+      premium: 39900, // $399/month
+      seller: 59900, // $599/month
     };
 
     const session = await stripe.checkout.sessions.create({
@@ -66,8 +66,8 @@ export class StripeService {
         suburb,
         tier,
       },
-      success_url: `${env.API_URL}/dashboard/agent/subscriptions?success=true`,
-      cancel_url: `${env.API_URL}/dashboard/agent/subscriptions?canceled=true`,
+      success_url: `${env.FRONTEND_URL}/agent/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${env.FRONTEND_URL}/agent/signup?canceled=true`,
     });
 
     logger.info(`Stripe checkout session created for agent ${agentId}`);
@@ -129,9 +129,9 @@ export class StripeService {
 
     // Create subscription in database
     const pricing: Record<SubscriptionTier, { price: number; leadCap: number }> = {
-      basic: { price: 99, leadCap: 10 },
-      premium: { price: 249, leadCap: 50 },
-      seller: { price: 499, leadCap: 999 },
+      basic: { price: 199, leadCap: 10 },
+      premium: { price: 399, leadCap: 50 },
+      seller: { price: 599, leadCap: 999 },
     };
 
     await this.subscriptionRepo.create({

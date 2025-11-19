@@ -3,6 +3,7 @@ import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { testDatabaseConnection, closeDatabaseConnection } from './config/database.js';
 import { redis } from './config/redis.js';
+import { emailWorker } from './workers/email.worker.js';
 
 const port = parseInt(env.PORT);
 
@@ -18,6 +19,11 @@ async function start() {
     // Test Redis connection
     await redis.ping();
     logger.info('Redis connection successful');
+
+    // Start workers (if enabled)
+    if (env.ENABLE_BACKGROUND_JOBS === 'true') {
+      logger.info('Background workers started (email notifications, etc.)');
+    }
 
     // Create Express app
     const app = createApp();
@@ -38,6 +44,12 @@ async function start() {
 
         // Close database connection
         await closeDatabaseConnection();
+
+        // Close workers
+        if (env.ENABLE_BACKGROUND_JOBS === 'true') {
+          await emailWorker.close();
+          logger.info('Workers closed');
+        }
 
         // Close Redis connection
         await redis.quit();
