@@ -359,71 +359,71 @@ This technical plan intentionally avoids business details and focuses on stack, 
 ## Implementation Checklist
 
 ### Backend Infrastructure
-- [ ] Initialize backend project structure and package.json
-- [ ] Set up Docker Compose for development (Postgres, Redis, RabbitMQ)
-- [ ] Configure TypeScript and ESLint
-- [ ] Create environment configuration and .env.example
+- [x] Initialize backend project structure and package.json
+- [x] Set up Docker Compose for development (Postgres, Redis) - RabbitMQ not needed (using BullMQ)
+- [x] Configure TypeScript and ESLint
+- [x] Create environment configuration and .env.example
 
 ### Database & ORM
-- [ ] Create database schema with Drizzle ORM
-- [ ] Implement database migrations
-- [ ] Set up database seeding for development
+- [x] Create database schema with Drizzle ORM
+- [x] Implement database migrations
+- [x] Set up database seeding for development
 
 ### Authentication & Authorization
-- [ ] Set up BetterAuth configuration
-- [ ] Implement user roles (user, agent, admin)
-- [ ] Create auth middleware for protected routes
+- [x] Set up BetterAuth configuration
+- [x] Implement user roles (user, agent, admin)
+- [x] Create auth middleware for protected routes
 
 ### Type Safety & Validation
-- [ ] Create shared Zod schemas for all entities
-- [ ] Implement type sync utilities between frontend/backend
-- [ ] Set up validation middleware
+- [x] Create shared Zod schemas for all entities
+- [x] Implement type sync utilities between frontend/backend
+- [x] Set up validation middleware
 
 ### Core Application
-- [ ] Implement Express app setup with middleware
-- [ ] Create repository layer for database operations
-- [ ] Implement service layer with business logic
-- [ ] Set up error handling middleware
-- [ ] Implement request logging
+- [x] Implement Express app setup with middleware
+- [x] Create repository layer for database operations
+- [x] Implement service layer with business logic
+- [x] Set up error handling middleware
+- [x] Implement request logging
 
 ### Public API Endpoints
-- [ ] GET /api/properties/:id - Get property details
-- [ ] GET /api/valuations/:propertyId - Get property valuation
-- [ ] GET /api/suburbs/:suburb/stats - Get suburb statistics
-- [ ] GET /api/properties/search - Search properties
-- [ ] POST /api/leads - Create buyer/seller lead
+- [x] GET /api/properties/:id - Get property details
+- [x] GET /api/valuations/:propertyId - Get property valuation
+- [x] GET /api/suburbs/:suburb/stats - Get suburb statistics
+- [x] GET /api/properties/search - Search properties (enhanced with text search)
+- [x] POST /api/leads - Create buyer/seller lead
 
 ### Agent API Endpoints
-- [ ] GET /api/agent/me - Get agent profile
-- [ ] GET /api/agent/leads - List agent's leads
-- [ ] PATCH /api/agent/leads/:id - Update lead status
-- [ ] GET /api/agent/subscriptions - Get agent subscriptions
-- [ ] GET /api/agent/metrics - Get agent performance metrics
+- [x] GET /api/agent/me - Get agent profile
+- [x] GET /api/agent/leads - List agent's leads
+- [x] PATCH /api/agent/leads/:id - Update lead status
+- [x] GET /api/agent/subscriptions - Get agent subscriptions
+- [x] GET /api/agent/metrics - Get agent performance metrics
 
 ### Admin API Endpoints
-- [ ] POST /api/admin/ingest/properties - Ingest property data
-- [ ] POST /api/admin/ingest/sales - Ingest sales data
-- [ ] POST /api/admin/ingest/rentals - Ingest rental data
-- [ ] POST /api/admin/retrain-avm - Trigger AVM retraining
+- [x] POST /api/admin/ingest/properties - Ingest property data (endpoint ready, needs API integration)
+- [x] POST /api/admin/ingest/sales - Ingest sales data (endpoint ready, needs API integration)
+- [x] POST /api/admin/ingest/rentals - Ingest rental data (endpoint ready, needs API integration)
+- [x] POST /api/admin/retrain-avm - Trigger AVM retraining (placeholder for ML model)
 - [ ] POST /api/admin/override-property - Override property data
 
 ### Lead Routing System
-- [ ] Implement lead routing logic service
-- [ ] Create agent ranking algorithm
-- [ ] Implement lead assignment rules
-- [ ] Set up lead notification system
+- [x] Implement lead routing logic service
+- [x] Create agent ranking algorithm
+- [x] Implement lead assignment rules
+- [x] Set up lead notification system (email notifications connected)
 
 ### Caching & Queues
-- [ ] Set up Redis caching layer
-- [ ] Implement cache invalidation strategies
-- [ ] Set up RabbitMQ queue system
-- [ ] Implement BullMQ background jobs
-- [ ] Create scheduled jobs (nightly data ingestion, weekly AVM training)
+- [x] Set up Redis caching layer
+- [x] Implement cache invalidation strategies
+- [x] ~~Set up RabbitMQ queue system~~ Using BullMQ instead
+- [x] Implement BullMQ background jobs
+- [x] Create scheduled jobs (nightly data ingestion, weekly AVM training)
 
 ### Email System
-- [ ] Set up Resend email integration
-- [ ] Create React Email templates (lead notifications, agent onboarding)
-- [ ] Implement email queue and retry logic
+- [x] Set up Resend email integration
+- [x] Create React Email templates (lead notifications, agent onboarding)
+- [x] Implement email queue and retry logic
 
 ### Payment Integration
 - [ ] Implement Stripe payment integration
@@ -432,18 +432,33 @@ This technical plan intentionally avoids business details and focuses on stack, 
 - [ ] Implement billing logic
 
 ### API Documentation
-- [ ] Set up Swagger API documentation
-- [ ] Document all endpoints with examples
-- [ ] Add authentication documentation
+- [x] Set up Swagger API documentation
+- [x] Document all endpoints with examples
+- [~] Add authentication documentation (partial)
 
 ### DevOps & Deployment
 - [ ] Create GitHub Actions CI/CD workflow
 - [ ] Set up Docker build for production
 - [ ] Create Docker Swarm production configuration
-- [ ] Set up health check endpoints
+- [x] Set up health check endpoints
 
 ### Documentation
-- [ ] Write comprehensive README with setup instructions
-- [ ] Document environment variables
-- [ ] Create API usage examples
-- [ ] Document development workflow
+- [x] Write comprehensive README with setup instructions (SETUP.md)
+- [x] Document environment variables
+- [x] Create API usage examples
+- [x] Document development workflow
+
+### Frontend (Phase 2 Additions)
+- [x] Property search page with filters
+- [x] Property detail pages
+- [x] /estimate page with address search and autocomplete
+- [x] Agent dashboard with leads management
+- [x] Lead capture forms integrated throughout
+- [x] Property valuation display with confidence bands
+
+### Next Phase TODO
+- [ ] External API integrations (LINZ, Council, MBIE) - See backend/src/jobs/workers.ts
+- [ ] ML-based valuation model (Python/FastAPI + XGBoost/LightGBM)
+- [ ] Stripe payment integration for agent subscriptions
+- [ ] CI/CD pipeline setup
+- [ ] Production deployment configuration
