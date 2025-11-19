@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
-import { MapPin, TrendingUp, Home, DollarSign, Calendar, ChartLine } from 'lucide-react';
+import { TrendingUp, Home, Calendar, ChartLine } from 'lucide-react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/api-client';
+import { SuburbHeader } from '@/components/SuburbHeader';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3000/api';
 
@@ -39,6 +39,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       ? new Intl.NumberFormat('en-NZ', { style: 'currency', currency: 'NZD', minimumFractionDigits: 0 }).format(medianPrice)
       : 'N/A';
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com';
+    const ogImageUrl = `${siteUrl}/api/og?suburb=${encodeURIComponent(suburb)}&price=${encodeURIComponent(formattedPrice)}&properties=${totalProperties}&sales=${stats?.salesStats?.last3Months?.count || 0}`;
+
     return {
       title: `${suburb} House Prices, Market Stats & Property Values | NZ Real Estate`,
       description: `${suburb} median house price: ${formattedPrice}. View ${totalProperties} properties, recent sales, market trends, and property valuations in ${suburb}, New Zealand.`,
@@ -46,6 +49,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         title: `${suburb} Property Market - ${formattedPrice} Median Price`,
         description: `Explore ${totalProperties} properties in ${suburb}. View sales history, market trends, and get free property valuations.`,
         type: 'website',
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${suburb} Property Market Statistics`,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${suburb} Property Market - ${formattedPrice}`,
+        description: `${totalProperties} properties, ${stats?.salesStats?.last3Months?.count || 0} recent sales. View market trends and get free valuations.`,
+        images: [ogImageUrl],
       },
     };
   } catch (error) {
@@ -123,14 +140,12 @@ export default async function SuburbPage({ params }: { params: { slug: string } 
 
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <MapPin className="h-8 w-8 text-primary-600" />
-              <h1 className="text-4xl font-bold">{suburb}</h1>
-            </div>
-            <p className="text-xl text-gray-600">Market Statistics & Property Insights</p>
-          </div>
+          {/* Header with Social Share */}
+          <SuburbHeader
+            suburb={suburb}
+            medianPrice={stats?.salesStats?.last3Months?.medianPrice || stats?.propertyStats?.medianCvValue}
+            totalProperties={stats?.propertyStats?.totalProperties}
+          />
 
           {/* Quick Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
