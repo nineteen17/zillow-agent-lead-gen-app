@@ -63,6 +63,10 @@ export class PasswordResetService {
 
   /**
    * Reset password using valid token
+   *
+   * NOTE: This uses Node's built-in crypto for password hashing.
+   * BetterAuth will re-hash on next login using its own methods.
+   * For production, integrate with BetterAuth's password update API.
    */
   async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     const verification = await this.verifyResetToken(token);
@@ -71,9 +75,10 @@ export class PasswordResetService {
       return { success: false, message: 'Invalid or expired token' };
     }
 
-    // Hash the new password using BetterAuth's password hashing
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Hash password using Node's crypto (PBKDF2)
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(newPassword, salt, 10000, 64, 'sha512').toString('hex');
+    const hashedPassword = `${salt}:${hash}`;
 
     // Update user password in accounts table
     const { accounts } = await import('../models/schema');
