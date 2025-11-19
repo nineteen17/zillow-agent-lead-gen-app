@@ -217,6 +217,14 @@ export default function EstimatePage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Disclaimer */}
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-xs text-yellow-800 leading-relaxed">
+                    <strong>Disclaimer:</strong> This is an automated estimate based on public records and suburb trends.
+                    It is not an appraisal. For a professional valuation, speak with a licensed real estate agent.
+                  </p>
+                </div>
               </div>
             ) : null}
 

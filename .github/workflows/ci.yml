@@ -1,0 +1,197 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '20.x'
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  # Backend Tests
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: zillow_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Run tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/zillow_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          NODE_ENV: test
+
+  # Frontend Tests
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Run tests
+        working-directory: ./frontend
+        run: npm test -- --passWithNoTests
+
+  # Build Docker images (only on main branch)
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract metadata (frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to production (only on main branch)
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/zillow-nz
+            docker stack deploy -c docker-stack.yml zillow --with-registry-auth
+            docker service update --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:main zillow_backend
+            docker service update --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:main zillow_frontend

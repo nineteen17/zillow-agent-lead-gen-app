@@ -3,6 +3,9 @@ import { logger } from '../config/logger.js';
 import { env } from '../config/env.js';
 import { ValuationService } from '../services/valuation.service.js';
 import { EmailService } from '../services/email.service.js';
+import { LINZService } from '../services/data-ingestion/linz.service.js';
+import { CouncilService } from '../services/data-ingestion/council.service.js';
+import { MBIEService } from '../services/data-ingestion/mbie.service.js';
 
 const connection = {
   host: env.REDIS_HOST,
@@ -12,6 +15,9 @@ const connection = {
 
 const valuationService = new ValuationService();
 const emailService = new EmailService();
+const linzService = new LINZService();
+const councilService = new CouncilService();
+const mbieService = new MBIEService();
 
 /**
  * Data Ingestion Worker
@@ -25,23 +31,61 @@ export const dataIngestionWorker = new Worker(
     const { type, data } = job.data;
 
     switch (type) {
-      case 'properties':
-        // Ingest properties data
-        logger.info('Ingesting properties data');
-        break;
+      case 'properties': {
+        // Ingest properties data from LINZ
+        logger.info('Ingesting properties data from LINZ');
+        const { suburb } = data || {};
 
-      case 'sales':
-        // Ingest sales data
-        logger.info('Ingesting sales data');
-        break;
+        if (!suburb) {
+          throw new Error('Suburb required for property ingestion');
+        }
 
-      case 'rentals':
-        // Ingest rental data
-        logger.info('Ingesting rental data');
-        break;
+        const result = await linzService.importAddressesToProperties(suburb);
+        return { success: true, ...result };
+      }
+
+      case 'sales': {
+        // Ingest sales data from Council
+        logger.info('Ingesting sales data from Council');
+        const { csvData } = data || {};
+
+        if (!csvData || !Array.isArray(csvData)) {
+          throw new Error('CSV data required for sales ingestion');
+        }
+
+        const result = await councilService.importSalesFromCSV(csvData);
+        return { success: true, ...result };
+      }
+
+      case 'rentals': {
+        // Ingest rental data from MBIE
+        logger.info('Ingesting rental data from MBIE');
+        const { csvData } = data || {};
+
+        if (!csvData || !Array.isArray(csvData)) {
+          throw new Error('CSV data required for rental ingestion');
+        }
+
+        const result = await mbieService.importRentalStatsFromCSV(csvData);
+        return { success: true, ...result };
+      }
+
+      case 'council-properties': {
+        // Import council rating data from CSV
+        logger.info('Importing council property data from CSV');
+        const { csvData } = data || {};
+
+        if (!csvData || !Array.isArray(csvData)) {
+          throw new Error('CSV data required for council property ingestion');
+        }
+
+        const result = await councilService.importFromCSV(csvData);
+        return { success: true, ...result };
+      }
 
       default:
         logger.warn(`Unknown data ingestion type: ${type}`);
+        throw new Error(`Unknown ingestion type: ${type}`);
     }
 
     return { success: true, processed: data?.length || 0 };
