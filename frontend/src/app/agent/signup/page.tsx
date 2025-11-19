@@ -10,17 +10,21 @@ export default function AgentSignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTier = (searchParams.get('tier') as 'basic' | 'premium' | 'seller') || 'premium';
+  const canceled = searchParams.get('canceled') === 'true';
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     phone: '',
     agencyName: '',
     licenseNumber: '',
     tier: initialTier,
     suburbs: [] as string[],
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [suburbSearch, setSuburbSearch] = useState('');
 
   // Fetch all suburbs
@@ -60,31 +64,55 @@ export default function AgentSignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (step === 1) {
       // Validate step 1
-      if (!formData.name || !formData.email || !formData.phone) {
-        alert('Please fill in all required fields');
+      if (!formData.name || !formData.email || !formData.password || !formData.phone) {
+        setError('Please fill in all required fields');
+        return;
+      }
+      if (formData.password.length < 8) {
+        setError('Password must be at least 8 characters');
         return;
       }
       setStep(2);
     } else if (step === 2) {
       // Validate step 2
       if (formData.suburbs.length === 0) {
-        alert('Please select at least one suburb');
+        setError('Please select at least one suburb');
         return;
       }
       setStep(3);
     } else {
-      // Final step - Create Stripe checkout session
+      // Final step - Create account and Stripe checkout session
+      setIsSubmitting(true);
       try {
-        // Here you would call your Stripe checkout API
-        // For now, just redirect to a success page
-        alert('Signup complete! Redirecting to payment...');
-        // router.push('/agent/dashboard');
+        const response = await apiClient.signupAgent({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          agencyName: formData.agencyName || undefined,
+          licenseNumber: formData.licenseNumber || undefined,
+          tier: formData.tier,
+          suburbs: formData.suburbs,
+        });
+
+        // Redirect to Stripe checkout
+        if (response.checkoutUrl) {
+          window.location.href = response.checkoutUrl;
+        } else {
+          throw new Error('No checkout URL received');
+        }
       } catch (error) {
         console.error('Signup error:', error);
-        alert('An error occurred. Please try again.');
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'An error occurred during signup. Please try again.'
+        );
+        setIsSubmitting(false);
       }
     }
   };
@@ -130,6 +158,21 @@ export default function AgentSignupPage() {
         </div>
 
         <div className="card">
+          {canceled && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+              <p className="font-semibold mb-1">Payment Canceled</p>
+              <p className="text-sm">
+                Your payment was canceled. You can try again whenever you're ready. Your information has been saved.
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit}>
             {/* Step 1: Agent Details */}
             {step === 1 && (
@@ -162,6 +205,21 @@ export default function AgentSignupPage() {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="john@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      placeholder="At least 8 characters"
                     />
                   </div>
 
@@ -422,14 +480,16 @@ export default function AgentSignupPage() {
                     type="button"
                     onClick={() => setStep(2)}
                     className="btn bg-gray-100 hover:bg-gray-200 text-gray-900"
+                    disabled={isSubmitting}
                   >
                     Back
                   </button>
                   <button
                     type="submit"
-                    className="btn bg-primary-600 hover:bg-primary-700 text-white px-12"
+                    className="btn bg-primary-600 hover:bg-primary-700 text-white px-12 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
                   >
-                    Proceed to Payment
+                    {isSubmitting ? 'Creating Account...' : 'Proceed to Payment'}
                   </button>
                 </div>
               </div>
