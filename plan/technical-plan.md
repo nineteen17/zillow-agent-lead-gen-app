@@ -401,11 +401,11 @@ This technical plan intentionally avoids business details and focuses on stack, 
 - [x] GET /api/agent/metrics - Get agent performance metrics
 
 ### Admin API Endpoints
-- [x] POST /api/admin/ingest/properties - Ingest property data (endpoint ready, needs API integration)
-- [x] POST /api/admin/ingest/sales - Ingest sales data (endpoint ready, needs API integration)
-- [x] POST /api/admin/ingest/rentals - Ingest rental data (endpoint ready, needs API integration)
+- [x] POST /api/admin/ingest/properties - Ingest property data (LINZ integration complete)
+- [x] POST /api/admin/ingest/sales - Ingest sales data (Council CSV import complete)
+- [x] POST /api/admin/ingest/rentals - Ingest rental data (MBIE CSV import complete)
 - [x] POST /api/admin/retrain-avm - Trigger AVM retraining (placeholder for ML model)
-- [ ] POST /api/admin/override-property - Override property data
+- [x] PATCH /api/admin/properties/:id/override - Override property data
 
 ### Lead Routing System
 - [x] Implement lead routing logic service
@@ -426,20 +426,20 @@ This technical plan intentionally avoids business details and focuses on stack, 
 - [x] Implement email queue and retry logic
 
 ### Payment Integration
-- [ ] Implement Stripe payment integration
-- [ ] Create subscription management endpoints
-- [ ] Set up webhook handlers for payment events
-- [ ] Implement billing logic
+- [x] Implement Stripe payment integration
+- [x] Create subscription management endpoints
+- [x] Set up webhook handlers for payment events
+- [x] Implement billing logic
 
 ### API Documentation
 - [x] Set up Swagger API documentation
 - [x] Document all endpoints with examples
-- [~] Add authentication documentation (partial)
+- [x] Add authentication documentation
 
 ### DevOps & Deployment
-- [ ] Create GitHub Actions CI/CD workflow
-- [ ] Set up Docker build for production
-- [ ] Create Docker Swarm production configuration
+- [x] Create GitHub Actions CI/CD workflow
+- [x] Set up Docker build for production
+- [x] Create Docker Swarm production configuration
 - [x] Set up health check endpoints
 
 ### Documentation
@@ -456,9 +456,20 @@ This technical plan intentionally avoids business details and focuses on stack, 
 - [x] Lead capture forms integrated throughout
 - [x] Property valuation display with confidence bands
 
-### Next Phase TODO
-- [ ] External API integrations (LINZ, Council, MBIE) - See backend/src/jobs/workers.ts
+### Stripe Payment Endpoints (NEW)
+- [x] POST /api/stripe/create-checkout - Create subscription checkout session
+- [x] POST /api/stripe/webhook - Handle Stripe webhook events
+- [x] POST /api/stripe/cancel-subscription/:id - Cancel agent subscription
+
+### Data Ingestion Services (NEW)
+- [x] LINZService - Property addresses from LINZ WFS API
+- [x] CouncilService - Rating data and sales from councils (CSV import)
+- [x] MBIEService - Rental statistics from Tenancy Services (CSV import)
+- [x] Background workers integrated with data services
+
+### Next Phase TODO (Optional Future Enhancements)
 - [ ] ML-based valuation model (Python/FastAPI + XGBoost/LightGBM)
-- [ ] Stripe payment integration for agent subscriptions
-- [ ] CI/CD pipeline setup
-- [ ] Production deployment configuration
+- [ ] Live LINZ API integration (add LINZ_API_KEY to environment)
+- [ ] Live Council API integration (configure COUNCIL_API_KEYS)
+- [ ] Automated web scraping for sales data
+- [ ] Real-time rental market data ingestion
