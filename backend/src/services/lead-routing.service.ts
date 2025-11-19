@@ -1,6 +1,7 @@
 import { AgentRepository } from '../repositories/agent.repository.js';
 import { LeadRepository } from '../repositories/lead.repository.js';
 import { logger } from '../config/logger.js';
+import { emailQueue } from '../config/bullmq.js';
 import type { CreateLead } from '../models/zod-schemas.js';
 
 interface RankedAgent {
@@ -59,7 +60,26 @@ export class LeadRoutingService {
       leadsConverted: currentMetrics?.leadsConverted || 0,
     });
 
-    return { lead: updatedLead, assignedAgent: subscriptions.find(s => s.agent.id === topAgent.agentId)?.agent };
+    // Queue email notification to the agent
+    const assignedAgent = subscriptions.find(s => s.agent.id === topAgent.agentId)?.agent;
+    if (assignedAgent) {
+      await emailQueue.add('lead-notification', {
+        type: 'lead-notification',
+        data: {
+          agentEmail: assignedAgent.email,
+          agentName: assignedAgent.name,
+          leadName: leadData.name,
+          leadEmail: leadData.email,
+          leadPhone: leadData.phone,
+          leadMessage: leadData.message,
+          leadType: leadData.leadType,
+          suburb: leadData.suburb,
+        },
+      });
+      logger.info(`Email notification queued for agent ${assignedAgent.email}`);
+    }
+
+    return { lead: updatedLead, assignedAgent };
   }
 
   /**
