@@ -370,3 +370,254 @@ export const alertHistoryRelations = relations(alertHistory, ({ one }) => ({
     references: [emailSubscriptions.id],
   }),
 }));
+
+// Password reset tokens table
+export const passwordResetTokens = pgTable('password_reset_tokens', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  tokenIdx: uniqueIndex('password_reset_tokens_token_idx').on(table.token),
+  userIdx: index('password_reset_tokens_user_idx').on(table.userId),
+}));
+
+// Agent reviews table
+export const agentReviews = pgTable('agent_reviews', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  leadId: text('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+  rating: integer('rating').notNull(), // 1-5
+  title: varchar('title', { length: 255 }),
+  comment: text('comment'),
+  isVerified: boolean('is_verified').default(false),
+  isPublished: boolean('is_published').default(true),
+  agentResponse: text('agent_response'),
+  respondedAt: timestamp('responded_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  agentIdx: index('agent_reviews_agent_idx').on(table.agentId),
+  leadIdx: index('agent_reviews_lead_idx').on(table.leadId),
+  ratingIdx: index('agent_reviews_rating_idx').on(table.rating),
+  publishedIdx: index('agent_reviews_published_idx').on(table.isPublished),
+}));
+
+// Saved searches table
+export const savedSearches = pgTable('saved_searches', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  searchCriteria: json('search_criteria').notNull(), // Store search filters as JSON
+  emailAlerts: boolean('email_alerts').default(true),
+  alertFrequency: alertFrequencyEnum('alert_frequency').default('daily'),
+  lastNotifiedAt: timestamp('last_notified_at'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index('saved_searches_user_idx').on(table.userId),
+  activeIdx: index('saved_searches_active_idx').on(table.isActive),
+}));
+
+// Saved properties table (favorites)
+export const savedProperties = pgTable('saved_properties', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  propertyId: text('property_id').notNull().references(() => properties.id, { onDelete: 'cascade' }),
+  notes: text('notes'),
+  tags: json('tags').$type<string[]>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  userPropertyIdx: uniqueIndex('saved_properties_user_property_idx').on(table.userId, table.propertyId),
+  userIdx: index('saved_properties_user_idx').on(table.userId),
+  propertyIdx: index('saved_properties_property_idx').on(table.propertyId),
+}));
+
+// Lead conversion funnel tracking table
+export const leadConversionEvents = pgTable('lead_conversion_events', {
+  id: text('id').primaryKey(),
+  leadId: text('lead_id').notNull().references(() => leads.id, { onDelete: 'cascade' }),
+  eventType: varchar('event_type', { length: 50 }).notNull(), // 'created', 'delivered', 'viewed', 'contacted', 'qualified', 'won', 'lost'
+  agentId: text('agent_id').references(() => agents.id, { onDelete: 'set null' }),
+  metadata: json('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  leadIdx: index('lead_conversion_events_lead_idx').on(table.leadId),
+  eventTypeIdx: index('lead_conversion_events_event_type_idx').on(table.eventType),
+  createdIdx: index('lead_conversion_events_created_idx').on(table.createdAt),
+}));
+
+// A/B test experiments table
+export const experiments = pgTable('experiments', {
+  id: text('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  variants: json('variants').notNull(), // Array of variant configurations
+  isActive: boolean('is_active').default(false),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  activeIdx: index('experiments_active_idx').on(table.isActive),
+}));
+
+// A/B test assignments table
+export const experimentAssignments = pgTable('experiment_assignments', {
+  id: text('id').primaryKey(),
+  experimentId: text('experiment_id').notNull().references(() => experiments.id, { onDelete: 'cascade' }),
+  userId: text('user_id'),
+  sessionId: text('session_id'),
+  variantId: varchar('variant_id', { length: 100 }).notNull(),
+  assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+}, (table) => ({
+  experimentIdx: index('experiment_assignments_experiment_idx').on(table.experimentId),
+  userIdx: index('experiment_assignments_user_idx').on(table.userId),
+  sessionIdx: index('experiment_assignments_session_idx').on(table.sessionId),
+}));
+
+// A/B test events table
+export const experimentEvents = pgTable('experiment_events', {
+  id: text('id').primaryKey(),
+  experimentId: text('experiment_id').notNull().references(() => experiments.id, { onDelete: 'cascade' }),
+  assignmentId: text('assignment_id').notNull().references(() => experimentAssignments.id, { onDelete: 'cascade' }),
+  eventType: varchar('event_type', { length: 100 }).notNull(), // 'page_view', 'button_click', 'conversion', etc.
+  metadata: json('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  experimentIdx: index('experiment_events_experiment_idx').on(table.experimentId),
+  assignmentIdx: index('experiment_events_assignment_idx').on(table.assignmentId),
+  eventTypeIdx: index('experiment_events_event_type_idx').on(table.eventType),
+}));
+
+// SMS notification queue table
+export const smsNotifications = pgTable('sms_notifications', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  phoneNumber: varchar('phone_number', { length: 50 }).notNull(),
+  message: text('message').notNull(),
+  leadId: text('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 50 }).default('pending').notNull(), // 'pending', 'sent', 'failed', 'delivered'
+  twilioMessageSid: varchar('twilio_message_sid', { length: 255 }),
+  errorMessage: text('error_message'),
+  sentAt: timestamp('sent_at'),
+  deliveredAt: timestamp('delivered_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  agentIdx: index('sms_notifications_agent_idx').on(table.agentId),
+  statusIdx: index('sms_notifications_status_idx').on(table.status),
+  leadIdx: index('sms_notifications_lead_idx').on(table.leadId),
+}));
+
+// Agent preferences table
+export const agentPreferences = pgTable('agent_preferences', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }).unique(),
+  emailNotifications: boolean('email_notifications').default(true),
+  smsNotifications: boolean('sms_notifications').default(false),
+  notifyOnNewLead: boolean('notify_on_new_lead').default(true),
+  notifyOnLeadUpdate: boolean('notify_on_lead_update').default(false),
+  dailyDigest: boolean('daily_digest').default(false),
+  weeklyReport: boolean('weekly_report').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  agentIdx: uniqueIndex('agent_preferences_agent_idx').on(table.agentId),
+}));
+
+// Relations for new tables
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.userId],
+    references: [users.id],
+  }),
+}));
+
+export const agentReviewsRelations = relations(agentReviews, ({ one }) => ({
+  agent: one(agents, {
+    fields: [agentReviews.agentId],
+    references: [agents.id],
+  }),
+  lead: one(leads, {
+    fields: [agentReviews.leadId],
+    references: [leads.id],
+  }),
+  user: one(users, {
+    fields: [agentReviews.userId],
+    references: [users.id],
+  }),
+}));
+
+export const savedSearchesRelations = relations(savedSearches, ({ one }) => ({
+  user: one(users, {
+    fields: [savedSearches.userId],
+    references: [users.id],
+  }),
+}));
+
+export const savedPropertiesRelations = relations(savedProperties, ({ one }) => ({
+  user: one(users, {
+    fields: [savedProperties.userId],
+    references: [users.id],
+  }),
+  property: one(properties, {
+    fields: [savedProperties.propertyId],
+    references: [properties.id],
+  }),
+}));
+
+export const leadConversionEventsRelations = relations(leadConversionEvents, ({ one }) => ({
+  lead: one(leads, {
+    fields: [leadConversionEvents.leadId],
+    references: [leads.id],
+  }),
+  agent: one(agents, {
+    fields: [leadConversionEvents.agentId],
+    references: [agents.id],
+  }),
+}));
+
+export const experimentsRelations = relations(experiments, ({ many }) => ({
+  assignments: many(experimentAssignments),
+  events: many(experimentEvents),
+}));
+
+export const experimentAssignmentsRelations = relations(experimentAssignments, ({ one, many }) => ({
+  experiment: one(experiments, {
+    fields: [experimentAssignments.experimentId],
+    references: [experiments.id],
+  }),
+  events: many(experimentEvents),
+}));
+
+export const experimentEventsRelations = relations(experimentEvents, ({ one }) => ({
+  experiment: one(experiments, {
+    fields: [experimentEvents.experimentId],
+    references: [experiments.id],
+  }),
+  assignment: one(experimentAssignments, {
+    fields: [experimentEvents.assignmentId],
+    references: [experimentAssignments.id],
+  }),
+}));
+
+export const smsNotificationsRelations = relations(smsNotifications, ({ one }) => ({
+  agent: one(agents, {
+    fields: [smsNotifications.agentId],
+    references: [agents.id],
+  }),
+  lead: one(leads, {
+    fields: [smsNotifications.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export const agentPreferencesRelations = relations(agentPreferences, ({ one }) => ({
+  agent: one(agents, {
+    fields: [agentPreferences.agentId],
+    references: [agents.id],
+  }),
+}));

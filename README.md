@@ -172,7 +172,7 @@ Access the Swagger documentation at: **http://localhost:3000/api-docs**
 - `POST /api/admin/ingest/sales` - Bulk ingest sales data
 - `POST /api/admin/valuations/recompute/:suburb` - Recompute valuations
 
-## 🎯 Key Features
+## 🎯 Key Features (Phase 1 + 2)
 
 ### Complete Agent Acquisition Funnel ✅
 
@@ -230,15 +230,59 @@ Automatically assigns leads to the best available agent based on:
   - Tier and monthly price shown
   - Active status indicators
 
-### Email Notifications ✅
+### Email & SMS Notifications ✅
 
-**Automated email system** with BullMQ worker
+**Automated notification system** with BullMQ worker
 
-- **Lead Notifications**: Instant email to agent when new lead arrives
+- **Lead Notifications**: Instant email/SMS to agent when new lead arrives
 - **Welcome Emails**: Sent after agent signs up
+- **Password Reset**: Secure token-based password reset flow
+- **SMS Alerts**: Twilio integration for SMS notifications (optional)
+- **Agent Preferences**: Customizable notification settings per agent
 - **Beautiful HTML Templates**: Professional design with branding
 - **Rate Limited**: 10 emails/second to prevent spam
-- **Automatic Retries**: Failed emails retry automatically
+- **Automatic Retries**: Failed messages retry automatically
+
+### Advanced Analytics & Reporting ✅
+
+**Comprehensive performance tracking**
+
+- **Agent Performance**: Contact rate, qualification rate, conversion rate
+- **Response Time Tracking**: Average time to first contact
+- **Lead Source Analytics**: Track where leads come from
+- **Conversion Funnel**: Visualize lead journey from created to won
+- **Revenue Dashboards**: MRR, tier breakdown, suburb performance
+- **A/B Testing**: Experiment framework for optimizing conversion
+
+### Agent Reviews & Ratings ✅
+
+**Build trust and transparency**
+
+- **5-Star Rating System**: Users can rate agents after interactions
+- **Verified Reviews**: Reviews linked to actual leads are verified
+- **Agent Responses**: Agents can respond to reviews publicly
+- **Rating Statistics**: Average rating, distribution by star count
+- **Top-Rated Agents**: Discover best performing agents by suburb
+
+### Subscription Management ✅
+
+**Flexible subscription control**
+
+- **Add/Remove Suburbs**: Agents can expand or reduce coverage areas
+- **Tier Upgrades/Downgrades**: Change subscription tiers on the fly
+- **Real-time MRR Tracking**: See monthly recurring revenue at a glance
+- **Suburb Availability**: Browse and subscribe to available suburbs
+- **Active Subscription Dashboard**: Manage all subscriptions in one place
+
+### User Features ✅
+
+**Enhanced user experience**
+
+- **Saved Searches**: Save search criteria and get alerts for new matches
+- **Saved Properties**: Favorite properties for later viewing
+- **Advanced Filters**: Filter by price, beds, baths, property type, land area
+- **Password Reset**: Secure self-service password recovery
+- **Property Alerts**: Get notified when new properties match saved searches
 
 ### Valuation Engine
 
@@ -545,26 +589,28 @@ With 20 paying agents:
 - [x] Email worker (background processing)
 - [x] Swagger API documentation
 
-### 🔄 Phase 2: Growth & Optimization (Optional)
+### ✅ Phase 2: Growth & Optimization (Complete)
 
 **Agent Features**
-- [ ] Agent profile pages (public)
-- [ ] SMS notifications (Twilio integration)
-- [ ] Subscription management UI (add/remove suburbs, upgrade tier)
-- [ ] Password reset flow
-- [ ] Agent reviews & ratings
+- [x] Agent profile pages (public) - `/agents/[agentId]`
+- [x] SMS notifications (Twilio integration)
+- [x] Subscription management UI (add/remove suburbs, upgrade tier)
+- [x] Password reset flow (`/forgot-password`, `/reset-password`)
+- [x] Agent reviews & ratings (5-star system with responses)
+- [x] Agent preferences (email/SMS notification settings)
 
 **Platform Enhancements**
-- [ ] Advanced search filters
-- [ ] Map-based property browser
-- [ ] Property alerts & saved searches
-- [ ] Mobile app APIs
+- [x] Advanced search filters (price, beds, baths, property type, land area, sorting)
+- [x] Property alerts & saved searches (user favorites and search alerts)
+- [x] Mobile-ready responsive design
+- [ ] Map-based property browser (basic structure ready)
+- [ ] Full mobile app APIs (REST APIs ready, GraphQL optional)
 
 **Analytics**
-- [ ] Advanced agent performance analytics
-- [ ] Lead conversion funnel tracking
-- [ ] Revenue dashboards
-- [ ] A/B testing framework
+- [x] Advanced agent performance analytics (contact rate, conversion rate, response time)
+- [x] Lead conversion funnel tracking (event-based tracking system)
+- [x] Revenue dashboards (MRR, tier breakdown, suburb breakdown)
+- [x] A/B testing framework (experiments, variants, event tracking)
 
 ### 🚀 Phase 3: Scale & Enterprise (Future)
 

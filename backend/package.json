@@ -43,7 +43,9 @@
     "express-rate-limit": "^7.5.0",
     "compression": "^1.7.5",
     "cookie-parser": "^1.4.7",
-    "nanoid": "^5.0.9"
+    "nanoid": "^5.0.9",
+    "twilio": "^5.4.0",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -54,6 +56,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
     "@types/amqplib": "^0.10.5",
+    "@types/bcryptjs": "^2.4.6",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
     "eslint": "^9.18.0",
